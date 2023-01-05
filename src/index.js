@@ -41,6 +41,9 @@ const handleLoadMoreBtnClick = async () => {
 
     if (pixabayApi.page === data.totalHits) {
       refs.loadMoreBtn.classList.add('is-hidden');
+      Notiflix.Notify.warning(
+        "We're sorry, but you've reached the end of search results."
+      );
     }
     refs.galleryList.insertAdjacentHTML(
       'beforeend',
