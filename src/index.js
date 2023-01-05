@@ -1,47 +1,50 @@
-import debounce from 'lodash.debounce';
 import './css/styles.css';
-import { fetchCountriesName } from './fetchCountries';
-import country from './templates/country.hbs';
-import countryList from './templates/country-list.hbs';
+import { PixabayAPI } from './pixabay-api';
 import Notiflix from 'notiflix';
-
-const DEBOUNCE_DELAY = 300;
+import createGalleryCards from './templates/gallery.hbs';
 
 const refs = {
-  textInput: document.querySelector('#search-box'),
-  listCountry: document.querySelector('.country-list'),
-  countryInfo: document.querySelector('.country-info'),
+  searchForm: document.querySelector('.search-form'),
+  searchBtn: document.querySelector('.js-btn-search'),
+  loadMoreBtn: document.querySelector('.load-more'),
+  galleryList: document.querySelector('.gallery'),
 };
 
-const handleCountiesInput = event => {
-  const inputValue = event.target.value.trim();
+const pixabayApi = new PixabayAPI();
 
-  if (inputValue === '') {
-    refs.listCountry.innerHTML = '';
-    refs.countryInfo.innerHTML = '';
-    return;
-  }
+const onSearchFormSubmit = event => {
+  event.preventDefault();
+  const searchQuery = event.currentTarget.elements['searchQuery'].value;
+  pixabayApi.q = searchQuery;
+  pixabayApi.page = 1;
 
-  fetchCountriesName(inputValue)
-    .then(data => {
-      if (data.length === 1) {
-        refs.countryInfo.innerHTML = country(data);
-        return;
-      } else if (data.length > 1 && data.length <= 10) {
-        refs.listCountry.innerHTML = countryList(data);
-        return;
-      } else {
-        Notiflix.Notify.info(
-          'Too many matches found. Please enter a more specific name.'
-        );
-      }
-    })
-    .catch(err => {
-      Notiflix.Notify.failure(err.message);
-    });
+  pixabayApi.fetchPhotos().then(({ data }) => {
+    console.log(data);
+    if (!data.hits.length) {
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+      return;
+    }
+    refs.galleryList.innerHTML = createGalleryCards(data.hits);
+    refs.loadMoreBtn.classList.remove('is-hidden');
+  });
 };
 
-refs.textInput.addEventListener(
-  'input',
-  debounce(handleCountiesInput, DEBOUNCE_DELAY)
-);
+const handleLoadMoreBtnClick = () => {
+  pixabayApi.page += 1;
+
+  pixabayApi.fetchPhotos().then(({ data }) => {
+    console.log(data);
+    if (pixabayApi.page === data.totalHits) {
+      refs.loadMoreBtn.classList.add('is-hidden');
+    }
+    refs.galleryList.insertAdjacentHTML(
+      'beforeend',
+      createGalleryCards(data.hits)
+    );
+  });
+};
+
+refs.searchForm.addEventListener('submit', onSearchFormSubmit);
+refs.loadMoreBtn.addEventListener('click', handleLoadMoreBtnClick);
