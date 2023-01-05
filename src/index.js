@@ -39,7 +39,7 @@ const handleLoadMoreBtnClick = async () => {
   try {
     const { data } = await pixabayApi.fetchPhotos();
 
-    if (pixabayApi.page === data.totalHits) {
+    if (pixabayApi.page >= data.totalHits / pixabayApi.per_page) {
       refs.loadMoreBtn.classList.add('is-hidden');
       Notiflix.Notify.warning(
         "We're sorry, but you've reached the end of search results."

@@ -8,6 +8,7 @@ export class PixabayAPI {
 
   page = 1;
   q = null;
+  per_page = 40;
 
   fetchPhotos() {
     return axios.get(`${this.#BASE_URL}`, {
@@ -15,7 +16,7 @@ export class PixabayAPI {
         key: this.#API_KEY,
         q: this.q,
         page: this.page,
-        per_page: 40,
+        per_page: this.per_page,
         image_type: 'photo',
         orientation: 'horizontal',
         safesearch: true,
